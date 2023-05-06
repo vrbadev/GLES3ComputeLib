@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.25"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "GLES32ComputeLib",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "GLES32ComputeLib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GLES32ComputeLib-Debug-a29b57df0bd36b5140e5.json",
+					"name" : "GLES32ComputeLib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_conv2d::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_conv2d-Debug-67045577d3ec7b5d5bd2.json",
+					"name" : "test_conv2d",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/cmake-build-debug",
+		"source" : "/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

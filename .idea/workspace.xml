@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakePresetLoader">{
+  &quot;useNewFormat&quot;: true
+}</component>
+  <component name="CMakeReloadState">
+    <option name="reloaded" value="true" />
+  </component>
+  <component name="CMakeRunConfigurationManager">
+    <generated>
+      <config projectName="GLES32ComputeLib" targetName="test_conv2d" />
+      <config projectName="GLES32ComputeLib" targetName="GLES32ComputeLib" />
+      <config projectName="GLES32ComputeLib" targetName="GLES32ComputeLib_conv2d" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="37e853df-e957-4112-b096-887cb9526ada" name="Changes" comment="First library release.">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/GLES32ComputeLib.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/query/cache-v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/query/cmakeFiles-v1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/query/codemodel-v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/query/toolchains-v1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/cache-v2-4c0fcb526206e75d3cb5.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/cmakeFiles-v1-38fb8f203a2ed4485abc.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/codemodel-v2-76b1d0faa551e01235f0.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/directory-.-Debug-f5ebdc15457944623624.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/index-2023-05-06T15-02-00-0959.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/target-GLES32ComputeLib-Debug-a29b57df0bd36b5140e5.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/target-test_conv2d-Debug-67045577d3ec7b5d5bd2.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/toolchains-v1-c10bbdb29e66234d35cb.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/build.ninja" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/libGLES32ComputeLib.a" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/shaders/conv2d.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmake-build-debug/test_conv2d" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/compute_lib.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/gl32_utils.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/queue.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/shaders/conv2d.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/utils/image.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/utils/lodepng.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inc/utils/tiny_jpeg.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/other/lena.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/other/lena_out.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/libGLES32ComputeLib.a" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/compute_lib.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/gl32_utils.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/queue.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/shaders/conv2d.comp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tests/test_conv2d.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/lodepng.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="CMakeLists.txt" />
+      </list>
+    </option>
+    <option name="SCHEME" value="Project" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectApplicationVersion">
+    <option name="ide" value="CLion" />
+    <option name="majorVersion" value="2023" />
+    <option name="minorVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2OBWfD2S3YJIzvqciAyFBoEwnNh" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/lib",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.sourceCode.C/C++",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/lib" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/inc/utils" />
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/inc/shaders" />
+    </key>
+  </component>
+  <component name="RunManager" selected="CMake Application.test_conv2d">
+    <configuration name="GLES32ComputeLib" type="CMakeListConfigurationType" factoryName="CMakeListConfigurationFactory" temporary="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="GLES32ComputeLib" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GLES32ComputeLib" TARGET_NAME="GLES32ComputeLib" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="test_conv2d" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="../other/lena.png ../other/lena_out.jpg" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GLES32ComputeLib" TARGET_NAME="test_conv2d" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GLES32ComputeLib" RUN_TARGET_NAME="test_conv2d">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="CMake Application.GLES32ComputeLib" />
+      <item itemvalue="CMake Application.test_conv2d" />
+      <item itemvalue="CMake Debug.GLES32ComputeLib" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="CMake Debug.GLES32ComputeLib" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="37e853df-e957-4112-b096-887cb9526ada" name="Changes" comment="" />
+      <created>1681034556082</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1681034556082</updated>
+      <workItem from="1681034557387" duration="1539000" />
+      <workItem from="1683214033987" duration="13794000" />
+      <workItem from="1683275185029" duration="10287000" />
+      <workItem from="1683285478015" duration="14258000" />
+      <workItem from="1683380530038" duration="5253000" />
+      <workItem from="1683385830997" duration="1376000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VCPKGProject">
+    <isAutomaticEditVcpkgJson value="false" />
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticFoundErrors value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="First library release." />
+    <option name="LAST_COMMIT_MESSAGE" value="First library release." />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

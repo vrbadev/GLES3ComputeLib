@@ -1,0 +1,13 @@
+# ninja log v5
+0	12	0	/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/cmake-build-debug/CMakeFiles/cmake.verify_globs	713d5d1e29d1d860
+0	12	1683385324340879900	shaders/conv2d.o	ab6749e8c0bf78b3
+0	12	1683385324340879900	/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/cmake-build-debug/shaders/conv2d.o	ab6749e8c0bf78b3
+12	29	1683385324357431600	CMakeFiles/GLES32ComputeLib.dir/src/queue.c.o	33a305e036b1de7
+12	52	1683385324380844600	CMakeFiles/GLES32ComputeLib.dir/src/gl32_utils.c.o	4b1509ac18bb88e1
+12	64	1683385324392837200	CMakeFiles/GLES32ComputeLib.dir/src/compute_lib.c.o	28b8c4521522ed84
+0	80	1683385324408879800	CMakeFiles/test_conv2d.dir/src/tests/test_conv2d.c.o	1a301fa7af30e28d
+12	239	1683385324567744700	CMakeFiles/GLES32ComputeLib.dir/src/utils/lodepng.c.o	872c01d45413fc66
+240	251	1683385324576764900	libGLES32ComputeLib.a	dd7b187782d01c71
+251	276	1683385324604377700	test_conv2d	10349ec4a449c495
+0	12	0	/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/cmake-build-debug/CMakeFiles/cmake.verify_globs	713d5d1e29d1d860
+0	13	0	/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/cmake-build-debug/CMakeFiles/cmake.verify_globs	713d5d1e29d1d860

@@ -1,5 +1,5 @@
 # GLES32ComputeLib
-#### GNU C library utilising OpenGL ES3.2 offscreen rendering for image processing acceleration on GPU.
+#### GNU C library utilising OpenGL ES3.2 offscreen compute shaders for image processing acceleration on GPU.
 This repository contains complete CLion project for compiling static library archive and several testing executables.
 
 The library uses OpenGL ES3.2 capabilities and currently offers:
@@ -17,7 +17,7 @@ Additionally, libraries [lodepng](https://github.com/lvandeve/lodepng) and [Tiny
 CMake tries to locate `libGL.so`, `libEGL.so` and `libgbm.so` on the PC. Make sure to have these shared libraries available, they can usually be installed, e.g., by `apt` packages `libgl1-mesa-dev` and `libgbm-dev`.
 
 ## Usage
-For now, there is no tutorial prepared. However, you can look into directories `src/shaders` and `inc/shaders` to see how can be simple 2D convolution implemented. To test the implementation, build and run `test_conv2d` target. 
+For now, there is no tutorial prepared. However, you can look into directories `src/shaders` and `inc/shaders` to see how a simple 2D convolution can be implemented. To test the implementation, build and run `test_conv2d` target. 
 
 ## Licensing
 The library is available under GNU General Public License v3.0.

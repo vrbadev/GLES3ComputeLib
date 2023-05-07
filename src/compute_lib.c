@@ -157,7 +157,7 @@ GLuint compute_lib_error_queue_flush(compute_lib_instance_t* inst, FILE* out)
 {
     GLuint i = 0;
     compute_lib_error_t* err;
-    while (queue_size(inst->error_queue) > 0) {
+    while (inst->error_queue->size > 0) {
         err = (compute_lib_error_t*) queue_pop(inst->error_queue);
         if (out != NULL) {
             fprintf(out, "compute_lib: GL error #%d: %s (0x%X), severity: %s (0x%X), message = %.*s\n", err->err_id, gl32_get_define_name(err->type), err->type, gl32_get_define_name(err->severity), err->severity, err->message_len, err->message);

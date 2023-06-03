@@ -213,7 +213,7 @@ GLuint compute_lib_error_queue_flush(compute_lib_instance_t* inst, FILE* out)
     while (inst->error_queue->size > 0) {
         err = (compute_lib_error_t*) queue_pop(inst->error_queue);
         if (out != NULL) {
-            fprintf(out, "compute_lib: GL error #%d: %s (0x%X), severity: %s (0x%X), message = %.*s\n", err->err_id, gl32_get_define_name(err->type), err->type, gl32_get_define_name(err->severity), err->severity, err->message_len, err->message);
+            fprintf(out, "compute_lib: GL error #%d: %s (0x%X), severity: %s (0x%X), message = %.*s\n", err->err_id, gl3_get_define_name(err->type), err->type, gl3_get_define_name(err->severity), err->severity, err->message_len, err->message);
         }
         free(err->message);
         free(err);
@@ -380,7 +380,7 @@ GLuint compute_lib_program_print_resources(compute_lib_program_t* program, FILE*
 
     for (i = 0; i < count; i++) {
         glGetActiveAttrib(program->handle, (GLuint)i, name_max_len, &name_len, &size, &type, name);
-        fprintf(out, "Attribute #%d Type: %s (0x%04X) Name: %s\n", i, gl32_get_define_name(type), type, name);
+        fprintf(out, "Attribute #%d Type: %s (0x%04X) Name: %s\n", i, gl3_get_define_name(type), type, name);
     }
 
     // get active uniforms
@@ -395,7 +395,7 @@ GLuint compute_lib_program_print_resources(compute_lib_program_t* program, FILE*
             location_prop = GL_ATOMIC_COUNTER_BUFFER_INDEX;
             glGetProgramResourceiv(program->handle, GL_UNIFORM, index, 1, &location_prop, sizeof(location), NULL, &location);
         }
-        fprintf(out, "Uniform #%d Type: %s (0x%04X) Name: %s Index: %d Location: %d Size: %d\n", i, gl32_get_define_name(type), type, name, index, location, size);
+        fprintf(out, "Uniform #%d Type: %s (0x%04X) Name: %s Index: %d Location: %d Size: %d\n", i, gl3_get_define_name(type), type, name, index, location, size);
     }
 
     // get active SSBOs
@@ -640,7 +640,7 @@ void compute_lib_image2d_setup_format(compute_lib_image2d_t* image2d)
             }
             break;
     }
-    image2d->compatibility_format = gl32_get_image2d_compatibility_format(image2d->internal_format);
+    image2d->compatibility_format = gl3_get_image2d_compatibility_format(image2d->internal_format);
 }
 
 GLuint compute_lib_image2d_init(compute_lib_image2d_t* image2d, GLenum framebuffer_attachment)
@@ -655,7 +655,7 @@ GLuint compute_lib_image2d_init(compute_lib_image2d_t* image2d, GLenum framebuff
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, image2d->texture_filter);
     glTexStorage2D(GL_TEXTURE_2D, 1, image2d->internal_format, image2d->width, image2d->height);
     glBindImageTexture(image2d->resource.value, image2d->handle, 0, GL_FALSE, 0, image2d->access, image2d->compatibility_format);
-    size_t type_size = gl32_get_type_size(image2d->type);
+    size_t type_size = gl3_get_type_size(image2d->type);
     image2d->px_size = type_size * image2d->num_components;
     image2d->data_size = image2d->px_size * image2d->width * image2d->height;
     if (framebuffer_attachment != 0) {
@@ -670,7 +670,7 @@ GLuint compute_lib_image2d_init(compute_lib_image2d_t* image2d, GLenum framebuff
 GLchar* compute_lib_image2d_glsl_layout(compute_lib_image2d_t* image2d)
 {
     char* str;
-    asprintf(&str, "layout(%s, binding=%d) %s uniform highp %s %s", gl32_get_glsl_image2d_format_qualifier(image2d->compatibility_format), image2d->resource.value, gl32_get_glsl_image2d_access(image2d->access), gl32_get_glsl_image2d_type(image2d->compatibility_format), image2d->resource.name);
+    asprintf(&str, "layout(%s, binding=%d) %s uniform highp %s %s", gl3_get_glsl_image2d_format_qualifier(image2d->compatibility_format), image2d->resource.value, gl3_get_glsl_image2d_access(image2d->access), gl3_get_glsl_image2d_type(image2d->compatibility_format), image2d->resource.name);
     return str;
 }
 
@@ -774,9 +774,9 @@ GLuint compute_lib_acbo_destroy(compute_lib_acbo_t* acbo)
 GLuint compute_lib_acbo_write(compute_lib_acbo_t* acbo, void* data, GLint len)
 {
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, acbo->handle);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, gl32_get_type_size(acbo->type)*len, data, acbo->usage);
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, gl3_get_type_size(acbo->type)*len, data, acbo->usage);
     glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, acbo->resource.value, acbo->handle);
-    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, gl32_get_type_size(acbo->type)*len, data);
+    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, gl3_get_type_size(acbo->type)*len, data);
     return compute_lib_gl_errors_count();
 }
 
@@ -789,7 +789,7 @@ GLuint compute_lib_acbo_write_uint_val(compute_lib_acbo_t* acbo, GLuint value)
 GLuint compute_lib_acbo_read(compute_lib_acbo_t* acbo, void* data, GLint len)
 {
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, acbo->handle);
-    GLsizei size = gl32_get_type_size(acbo->type)*len;
+    GLsizei size = gl3_get_type_size(acbo->type)*len;
     memcpy(data, glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, size, GL_MAP_READ_BIT), size);
     glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
     return compute_lib_gl_errors_count();
@@ -818,23 +818,23 @@ GLuint compute_lib_ssbo_destroy(compute_lib_ssbo_t* ssbo)
 GLchar* compute_lib_ssbo_glsl_layout(compute_lib_ssbo_t* ssbo)
 {
     char* str;
-    asprintf(&str, "layout(std430, binding=%d) buffer %s { %s %s_data[]; }", ssbo->resource.value, ssbo->resource.name, gl32_get_glsl_data_type(ssbo->type), ssbo->resource.name);
+    asprintf(&str, "layout(std430, binding=%d) buffer %s { %s %s_data[]; }", ssbo->resource.value, ssbo->resource.name, gl3_get_glsl_data_type(ssbo->type), ssbo->resource.name);
     return str;
 }
 
 GLuint compute_lib_ssbo_write(compute_lib_ssbo_t* ssbo, void* data, GLint len)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo->handle);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gl32_get_type_size(ssbo->type)*len, data, ssbo->usage);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gl3_get_type_size(ssbo->type)*len, data, ssbo->usage);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo->resource.value, ssbo->handle);
-    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, gl32_get_type_size(ssbo->type)*len, data);
+    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, gl3_get_type_size(ssbo->type)*len, data);
     return compute_lib_gl_errors_count();
 }
 
 GLuint compute_lib_ssbo_read(compute_lib_ssbo_t* ssbo, void* data, GLint len)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo->handle);
-    GLint size = gl32_get_type_size(ssbo->type)*len;
+    GLint size = gl3_get_type_size(ssbo->type)*len;
     memcpy(data, glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, GL_MAP_READ_BIT), size);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     return compute_lib_gl_errors_count();

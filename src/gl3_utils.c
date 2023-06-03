@@ -1,4 +1,4 @@
-/// \file gl32_utils.c
+/// \file gl3_utils.c
 /// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 /// \date May 2023
 /// \brief This file implements auxiliary functions extending OpenGL ES3.2.
@@ -6,7 +6,7 @@
 
 #include "gl3_utils.h"
 
-const GLchar* gl32_get_define_name(GLuint64 define_value)
+const GLchar* gl3_get_define_name(GLuint64 define_value)
 {
     switch (define_value) {
         case 0x00000001:
@@ -1948,7 +1948,7 @@ const GLchar* gl32_get_define_name(GLuint64 define_value)
     }
 }
 
-GLsizei gl32_get_type_size(GLenum type)
+GLsizei gl3_get_type_size(GLenum type)
 {
     switch (type) {
         case GL_UNSIGNED_BYTE:
@@ -1980,7 +1980,7 @@ GLsizei gl32_get_type_size(GLenum type)
     }
 }
 
-GLuint gl32_get_image_format_num_components(GLenum format)
+GLuint gl3_get_image_format_num_components(GLenum format)
 {
     switch (format) {
         case GL_RED:
@@ -2000,7 +2000,7 @@ GLuint gl32_get_image_format_num_components(GLenum format)
     }
 }
 
-GLenum gl32_get_image2d_compatibility_format(GLenum internal_format)
+GLenum gl3_get_image2d_compatibility_format(GLenum internal_format)
 {
     switch(internal_format) {
         case GL_R16F:
@@ -2051,7 +2051,7 @@ GLenum gl32_get_image2d_compatibility_format(GLenum internal_format)
     }
 }
 
-const GLchar* gl32_get_glsl_image2d_type(GLenum compatibility_format)
+const GLchar* gl3_get_glsl_image2d_type(GLenum compatibility_format)
 {
     switch(compatibility_format) {
         case GL_RGBA32F:
@@ -2075,7 +2075,7 @@ const GLchar* gl32_get_glsl_image2d_type(GLenum compatibility_format)
     }
 }
 
-const GLchar* gl32_get_glsl_image2d_format_qualifier(GLenum compatibility_format)
+const GLchar* gl3_get_glsl_image2d_format_qualifier(GLenum compatibility_format)
 {
     switch(compatibility_format) {
         case GL_RGBA32F:
@@ -2109,7 +2109,7 @@ const GLchar* gl32_get_glsl_image2d_format_qualifier(GLenum compatibility_format
     }
 }
 
-const GLchar* gl32_get_glsl_image2d_access(GLenum access)
+const GLchar* gl3_get_glsl_image2d_access(GLenum access)
 {
     switch(access) {
         case GL_READ_ONLY:
@@ -2123,7 +2123,7 @@ const GLchar* gl32_get_glsl_image2d_access(GLenum access)
     }
 }
 
-const GLchar* gl32_get_glsl_data_type(GLenum type)
+const GLchar* gl3_get_glsl_data_type(GLenum type)
 {
     switch(type) {
         case GL_UNSIGNED_INT:

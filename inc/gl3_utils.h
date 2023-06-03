@@ -1,4 +1,4 @@
-/// \file gl32_utils.h
+/// \file gl3_utils.h
 /// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 /// \date May 2023
 /// \brief This header file contains auxiliary functions and structs definitions extending OpenGL ES3.X.
@@ -109,41 +109,41 @@ typedef struct vec4_s {
 /// Gets name of the OpenGL defined constant by its value.
 /// \param define_value Value of the OpenGL constant.
 /// \return Name of the preprocessor constant.
-const GLchar* gl32_get_define_name(GLuint64 define_value);
+const GLchar* gl3_get_define_name(GLuint64 define_value);
 
 /// Gets size of OpenGL type in bytes.
 /// \param type OpenGL type.
 /// \return Size in bytes.
-GLsizei gl32_get_type_size(GLenum type);
+GLsizei gl3_get_type_size(GLenum type);
 
 /// Gets number of pixel components based on the OpenGL image format.
 /// \param format OpenGL image format.
 /// \return Number of pixel components.
-GLuint gl32_get_image_format_num_components(GLenum format);
+GLuint gl3_get_image_format_num_components(GLenum format);
 
 /// Gets internal format compatible format for image2d qualifiers.
 /// \param internal_format Internal format GL constant of the image2d.
 /// \return Compatibility format for the image2d.
-GLenum gl32_get_image2d_compatibility_format(GLenum internal_format);
+GLenum gl3_get_image2d_compatibility_format(GLenum internal_format);
 
 /// Gets GLSL format qualifier string based on the internal-compatible format of the image2d.
 /// \param compatibility_format Compatibility format GL constant.
 /// \return String containing format qualifier for GLSL source.
-const GLchar* gl32_get_glsl_image2d_format_qualifier(GLenum compatibility_format);
+const GLchar* gl3_get_glsl_image2d_format_qualifier(GLenum compatibility_format);
 
 /// Gets GLSL variable type string (image2d, uimage2d, iimage2d) based on the compatibility format.
 /// \param compatibility_format Compatibility format GL constant.
 /// \return String containing variable type for GLSL source.
-const GLchar* gl32_get_glsl_image2d_type(GLenum compatibility_format);
+const GLchar* gl3_get_glsl_image2d_type(GLenum compatibility_format);
 
 /// Gets GLSL access type string (readonly, writeonly or empty string).
 /// \param access Access type GL constant.
 /// \return String containing access type for GLSL source.
-const GLchar* gl32_get_glsl_image2d_access(GLenum access);
+const GLchar* gl3_get_glsl_image2d_access(GLenum access);
 
 /// Gets GLSL data type string.
 /// \param type Data type GL constant.
 /// \return String containing data type for GLSL source.
-const GLchar* gl32_get_glsl_data_type(GLenum type);
+const GLchar* gl3_get_glsl_data_type(GLenum type);
 
 #endif // GLES3COMPUTELIB_GL3_UTILS_H

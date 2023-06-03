@@ -4,17 +4,23 @@ project(GLES3ComputeLib C)
 set(CMAKE_C_STANDARD 11)
 
 # Find all required libraries for linking
-find_library (LIBGBM libgbm.so REQUIRED)
-find_library (LIBEGL libEGL.so REQUIRED)
-find_library (LIBGL libGL.so REQUIRED)
-find_library (LIBM libm.so REQUIRED)
+include(cmake/FindOpenGLES.cmake)
+message("[GLES library v" ${GLES_VERSION_STRING} "]")
+message("-> Shared object location: " ${GLES_LIBRARIES})
+message("-> Include directory location: " ${GLES_INCLUDE_DIRS})
+
+include(cmake/FindEGL.cmake)
+message("[EGL library v" ${EGL_VERSION_STRING} "]")
+message("-> Shared object location: " ${EGL_LIBRARIES})
+message("-> Include directory location: " ${EGL_INCLUDE_DIRS})
+
+include(cmake/FindGBM.cmake)
+message("[GBM library]")
+message("-> Shared object location: " ${GBM_LIBRARIES})
+message("-> Include directory location: " ${GBM_INCLUDE_DIRS})
 
 # Include required library headers
-include_directories (inc ${OpenGL_LIBRARIES} ${LIBGBM_LIBRARIES})
-
-# Select proper OpenGL ES version available on the system
-# Possible values: OPENGL_ES_31 or OPENGL_ES_32
-add_compile_definitions(OPENGL_ES_31)
+include_directories (inc ${EGL_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${GLES_INCLUDE_DIRS})
 
 # Find all GLSL shader sources and add object targets to be appended to the final library binary
 file (GLOB_RECURSE SHADER_FILES_PATHS CONFIGURE_DEPENDS "*.comp" "*.vert" "*.frag" "*.tess" "*.geom" "*.glsl")
@@ -37,9 +43,8 @@ endforeach()
 set (THIS_LIBRARY $<TARGET_FILE:GLES3ComputeLib>)
 add_library (GLES3ComputeLib src/gl3_utils.c src/queue.c src/compute_lib.c src/utils/lodepng.c ${SHADER_OBJECTS})
 add_custom_command(TARGET GLES3ComputeLib POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${THIS_LIBRARY} ${CMAKE_SOURCE_DIR}/out)
-target_link_libraries (GLES3ComputeLib ${LIBM} ${LIBGL} ${LIBEGL} ${LIBGBM})
 
 # Target: Testing executable for 2D convolution
 add_executable (test_conv2d src/tests/test_conv2d.c)
-target_link_libraries (test_conv2d ${THIS_LIBRARY} ${LIBM} ${LIBGL} ${LIBEGL} ${LIBGBM})
+target_link_libraries (test_conv2d ${THIS_LIBRARY} m ${EGL_LIBRARIES} ${GBM_LIBRARIES} ${GLES_LIBRARIES})
 

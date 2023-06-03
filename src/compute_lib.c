@@ -1,7 +1,7 @@
 /// \file compute_lib.c
 /// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 /// \date May 2023
-/// \brief Main implementation of the GLES32ComputeLib library.
+/// \brief Main implementation of the GLES3ComputeLib library.
 /// \copyright GNU Public License.
 
 #include "compute_lib.h"
@@ -20,7 +20,7 @@ static const EGLint egl_ctx_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NON
 ///                   Possible values: GL_DEBUG_SEVERITY_NOTIFICATION, GL_DEBUG_SEVERITY_LOW, GL_DEBUG_SEVERITY_MEDIUM, GL_DEBUG_SEVERITY_HIGH.
 /// \param length The length of the error message (number of characters).
 /// \param message The error message string.
-/// \param inst Pointer to the GLES32ComputeLib library instance.
+/// \param inst Pointer to the GLES3ComputeLib library instance.
 static void compute_lib_gl_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, compute_lib_instance_t* inst)
 {
     switch (severity) {
@@ -54,7 +54,7 @@ static void compute_lib_gl_callback(GLenum source, GLenum type, GLuint id, GLenu
 
 
 /// Pushes lines from OpenGL program log to the library instance's error queue.
-/// \param program Pointer to the GLES32ComputeLib program instance.
+/// \param program Pointer to the GLES3ComputeLib program instance.
 /// \return Number of captured OpenGL errors.
 static GLuint compute_lib_program_log_to_queue(compute_lib_program_t* program)
 {
@@ -79,7 +79,7 @@ static GLuint compute_lib_program_log_to_queue(compute_lib_program_t* program)
 
 
 /// Pushes lines from OpenGL shader log to the library instance's error queue.
-/// \param program Pointer to the GLES32ComputeLib program instance.
+/// \param program Pointer to the GLES3ComputeLib program instance.
 /// \return Number of captured OpenGL errors.
 static GLuint compute_lib_program_shader_log_to_queue(compute_lib_program_t* program)
 {
@@ -682,7 +682,7 @@ GLuint compute_lib_image2d_destroy(compute_lib_image2d_t* image2d)
 }
 
 /// Allocates memory to store 2D image data (based on the image format and dimensions).
-/// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
+/// \param image2d Pointer to the GLES3ComputeLib 2D image instance.
 /// \return Pointer to the allocated memory.
 static inline void* compute_lib_image2d_alloc(compute_lib_image2d_t* image2d)
 {

@@ -1,7 +1,7 @@
 /// \file conv2d.h
 /// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 /// \date May 2023
-/// \brief Header file of the GLES32ComputeLib library implementation of 2D convolution.
+/// \brief Header file of the GLES3ComputeLib library implementation of 2D convolution.
 /// \copyright GNU Public License.
 
 #pragma once

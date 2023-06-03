@@ -1,7 +1,7 @@
 /// \file test_conv2d.c
 /// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 /// \date May 2023
-/// \brief Test source file for GLES32ComputeLib library implementation of 2D convolution.
+/// \brief Test source file for GLES3ComputeLib library implementation of 2D convolution.
 /// \copyright GNU Public License.
 
 #include "shaders/conv2d.h"

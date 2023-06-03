@@ -4,7 +4,7 @@
 /// \brief This file implements auxiliary functions extending OpenGL ES3.2.
 /// \copyright GNU Public License.
 
-#include "gl32_utils.h"
+#include "gl3_utils.h"
 
 const GLchar* gl32_get_define_name(GLuint64 define_value)
 {

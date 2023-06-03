@@ -1,8 +1,8 @@
-# GLES32ComputeLib
-#### GNU C library utilising OpenGL ES3.2 offscreen compute shaders for image processing acceleration on GPU.
+# GLES3ComputeLib
+#### GNU C library utilising OpenGL ES3.1/ES3.2 offscreen compute shaders for image processing acceleration on GPU.
 This repository contains complete CLion project for compiling static library archive and several testing executables.
 
-The library uses OpenGL ES3.2 capabilities and currently offers:
+The library uses OpenGL ES3.X capabilities and currently offers:
 * Library instance - used for easier handling of OpenGL features and processing of GLSL compilation errors.
 * Program instances - used for compilation of the provided GLSL source. There can be multiple programs prepared to be used within the same application and with the same images and buffers.
 * 2D image instances.

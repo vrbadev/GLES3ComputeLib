@@ -1,13 +1,13 @@
 /// \file gl32_utils.h
 /// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 /// \date May 2023
-/// \brief This header file contains auxiliary functions and structs definitions extending OpenGL ES3.2.
+/// \brief This header file contains auxiliary functions and structs definitions extending OpenGL ES3.X.
 /// \copyright GNU Public License.
 
 #pragma once
 
-#ifndef GLES3COMPUTELIB_GL32_UTILS_H
-#define GLES3COMPUTELIB_GL32_UTILS_H
+#ifndef GLES3COMPUTELIB_GL3_UTILS_H
+#define GLES3COMPUTELIB_GL3_UTILS_H
 
 #ifdef OPENGL_ES_32
 #include <GLES3/gl32.h>
@@ -146,4 +146,4 @@ const GLchar* gl32_get_glsl_image2d_access(GLenum access);
 /// \return String containing data type for GLSL source.
 const GLchar* gl32_get_glsl_data_type(GLenum type);
 
-#endif // GLES3COMPUTELIB_GL32_UTILS_H
+#endif // GLES3COMPUTELIB_GL3_UTILS_H

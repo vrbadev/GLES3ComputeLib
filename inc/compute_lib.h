@@ -9,6 +9,8 @@
 #ifndef GLES3COMPUTELIB_COMPUTE_LIB_H
 #define GLES3COMPUTELIB_COMPUTE_LIB_H
 
+#define _GNU_SOURCE // asprintf
+
 #include <fcntl.h> // open, O_RDWR
 #include <unistd.h> // close
 #include <string.h> // strstr, memcpy
@@ -66,7 +68,7 @@ typedef struct compute_lib_instance_s {
     /// Pointer to dynamically allocated queue of pointers to registered error instances.
     queue_t* error_queue;
     /// The verbosity of error message. Default value is GL_DEBUG_SEVERITY_LOW.
-    /// Possible values: GL_DEBUG_SEVERITY_NOTIFICATION, GL_DEBUG_SEVERITY_LOW, GL_DEBUG_SEVERITY_MEDIUM, GL_DEBUG_SEVERITY_HIGH.
+    /// Possible values: GL_DEBUG_SEVERITY_NOTIFICATION (or 4), GL_DEBUG_SEVERITY_LOW (or 3), GL_DEBUG_SEVERITY_MEDIUM (or 2), GL_DEBUG_SEVERITY_HIGH (1), 0 for no error logging.
     GLenum verbosity;
 } compute_lib_instance_t;
 
@@ -76,11 +78,27 @@ typedef struct compute_lib_program_s {
     compute_lib_instance_t* lib_inst;
     /// String containing GLSL shader program source for compilation.
     GLchar* source;
+    /// Compute shader local workers group size along x-axis.
+    GLuint local_size_x;
+    /// Compute shader local workers group size along y-axis.
+    GLuint local_size_y;
+    /// Compute shader local workers group size along z-axis.
+    GLuint local_size_z;
     /// Program handle assigned by OpenGL.
     GLuint handle;
     /// Shader program handle assigned by OpenGL.
     GLuint shader_handle;
 } compute_lib_program_t;
+
+/// Structure for GLES32ComputeLib resource description.
+typedef struct compute_lib_resource_s {
+    /// Name of the resource to be searched in the program.
+    const GLchar* name;
+    /// Type of the resource.
+    GLuint type;
+    /// Value of the resource description (location, index or binding).
+    GLint value;
+} compute_lib_resource_t;
 
 /// Structure of GLES32ComputeLib framebuffer instance.
 typedef struct compute_lib_framebuffer_s {
@@ -93,8 +111,8 @@ typedef struct compute_lib_framebuffer_s {
 
 /// Structure of GLES32ComputeLib 2D image instance.
 typedef struct compute_lib_image2d_s {
-    /// String containing uniform name of the 2D image as appears in the shader source.
-    const GLchar* uniform_name;
+    /// Structure for the program resource description.
+    compute_lib_resource_t resource;
     /// Texture unit number.
     /// Possible values: GL_TEXTUREi with i ranging from 0 to GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS-1.
     GLenum texture;
@@ -102,9 +120,6 @@ typedef struct compute_lib_image2d_s {
     GLsizei width;
     /// 2D image height in pixels.
     GLsizei height;
-    /// Internal image format to be used when performing formatted loads and stores into the image from shaders.
-    /// Possible values: GL_RGBA32F, GL_RGBA16F, GL_R32F, GL_RGBA32UI, GL_RGBA16UI, GL_RGBA8UI, GL_R32UI, GL_RGBA32I, GL_RGBA16I, GL_RGBA8I, GL_R32I, GL_RGBA8, GL_RGBA8_SNORM.
-    GLenum internal_format;
     /// Access type to be performed by shaders. Violations will lead to undefined results, possibly including program termination.
     /// Possible values: GL_READ_ONLY, GL_WRITE_ONLY, GL_READ_WRITE.
     GLenum access;
@@ -114,16 +129,21 @@ typedef struct compute_lib_image2d_s {
     /// Filter type for texture magnification and minifying functions.
     /// Possible values: GL_NEAREST, GL_LINEAR.
     GLfloat texture_filter;
-    /// Format of the pixel data provided to the shader.
-    /// Possible values: GL_RED, GL_RED_INTEGER, GL_RG, GL_RG_INTEGER, GL_RGB, GL_RGB_INTEGER, GL_RGBA, GL_RGBA_INTEGER, GL_DEPTH_COMPONENT, GL_DEPTH_STENCIL, GL_LUMINANCE_ALPHA, GL_LUMINANCE, GL_ALPHA.
-    GLenum format;
     /// Data type of the pixel data.
     /// Possible values: GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_SHORT, GL_SHORT, GL_UNSIGNED_INT, GL_INT, GL_HALF_FLOAT, GL_FLOAT, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1, GL_UNSIGNED_INT_2_10_10_10_REV, GL_UNSIGNED_INT_10F_11F_11F_REV, GL_UNSIGNED_INT_5_9_9_9_REV, GL_UNSIGNED_INT_24_8, GL_FLOAT_32_UNSIGNED_INT_24_8_REV.
     GLenum type;
+    /// Number of components of the pixel, ranging from 1 (RED) to 4 (RGBA).
+    GLuint num_components;
+    /// Format of the pixel data provided to the shader.
+    /// Possible values: GL_RED, GL_RED_INTEGER, GL_RG, GL_RG_INTEGER, GL_RGB, GL_RGB_INTEGER, GL_RGBA, GL_RGBA_INTEGER, GL_DEPTH_COMPONENT, GL_DEPTH_STENCIL, GL_LUMINANCE_ALPHA, GL_LUMINANCE, GL_ALPHA.
+    GLenum format;
+    /// Internal image format to be used when performing formatted loads and stores into the image from shaders.
+    GLenum internal_format;
+    /// Internal compatibility format.
+    /// Compatibility values: GL_RGBA32F, GL_RGBA16F, GL_R32F, GL_RGBA32UI, GL_RGBA16UI, GL_RGBA8UI, GL_R32UI, GL_RGBA32I, GL_RGBA16I, GL_RGBA8I, GL_R32I, GL_RGBA8, GL_RGBA8_SNORM.
+    GLenum compatibility_format;
     /// Image instance handle assigned by OpenGL.
     GLuint handle;
-    /// Image uniform location as appears in the shader source.
-    GLuint location;
     /// Total number of bytes required for allocation of the 2D image.
     GLuint data_size;
     /// Total number of bytes required to store a single pixel of the 2D image.
@@ -134,8 +154,8 @@ typedef struct compute_lib_image2d_s {
 
 /// Structure of GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 typedef struct compute_lib_acbo_s {
-    /// String containing name of the ACBO as appears in the shader source.
-    const GLchar* name;
+    /// Structure for the program resource description.
+    compute_lib_resource_t resource;
     /// Base data type of the ACBO.
     /// Possible values: GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT.
     GLenum type;
@@ -144,14 +164,12 @@ typedef struct compute_lib_acbo_s {
     GLenum usage;
     /// ACBO instance handle assigned by OpenGL.
     GLuint handle;
-    /// Program resource index for the ACBO, dynamically loaded using the compiled shader program.
-    GLuint index;
 } compute_lib_acbo_t;
 
 /// Structure of GLES32ComputeLib shader storage buffer object (SSBO) instance.
 typedef struct compute_lib_ssbo_s {
-    /// String containing name of the SSBO as appears in the shader source.
-    const GLchar* name;
+    /// Structure for the program resource description.
+    compute_lib_resource_t resource;
     /// Base data type of the SSBO.
     /// Possible values: GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT.
     GLenum type;
@@ -160,10 +178,6 @@ typedef struct compute_lib_ssbo_s {
     GLenum usage;
     /// SSBO instance handle assigned by OpenGL.
     GLuint handle;
-    /// SSBO index, dynamically loaded using the compiled shader program.
-    GLuint index;
-    /// Layout binding of the SSBO as appears in the shader source.
-    GLuint binding;
 } compute_lib_ssbo_t;
 
 /// Structure of GLES32ComputeLib uniform instance.
@@ -185,12 +199,21 @@ typedef struct compute_lib_uniform_s {
 /// Macro for initialization of new GLES32ComputeLib library instance.
 /// \param dri_path_ Path to GPU device rendering infrastructure.
 ///                    E.g. "/dev/dri/renderD128"
-#define COMPUTE_LIB_INSTANCE_NEW(dri_path_) ((compute_lib_instance_t) {.dri_path = (dri_path_), .initialised = false, .fd = 0, .gbm = NULL, .dpy = NULL, .ctx = EGL_NO_CONTEXT, .last_error = 0, .error_total_cnt = 0, .error_queue = NULL, .verbosity = GL_DEBUG_SEVERITY_LOW})
+#define COMPUTE_LIB_INSTANCE_NEW(dri_path_) ((compute_lib_instance_t) {.dri_path = (dri_path_), .initialised = false, .fd = 0, .gbm = NULL, .dpy = NULL, .ctx = EGL_NO_CONTEXT, .last_error = 0, .error_total_cnt = 0, .error_queue = NULL, .verbosity = 3})
 
 /// Macro for initialization of new GLES32ComputeLib program instance.
 /// \param lib_inst_ Pointer to the current GLES32ComputeLib library instance.
 /// \param source_ String containing GLSL shader program source for compilation.
-#define COMPUTE_LIB_PROGRAM_NEW(lib_inst_, source_) ((compute_lib_program_t) {.lib_inst = (lib_inst_), .source = (source_), .handle = 0, .shader_handle = 0})
+/// \param local_size_x_ Compute shader local workers group size along x-axis.
+/// \param local_size_y_ Compute shader local workers group size along y-axis.
+/// \param local_size_z_ Compute shader local workers group size along z-axis.
+#define COMPUTE_LIB_PROGRAM_NEW(lib_inst_, source_, local_size_x_, local_size_y_, local_size_z_) ((compute_lib_program_t) {.lib_inst = (lib_inst_), .source = (source_), .local_size_x = (local_size_x_), .local_size_y = (local_size_y_), .local_size_z = (local_size_z_), .handle = 0, .shader_handle = 0})
+
+/// Macro for initialization of new GLES32ComputeLib resource instance.
+/// \param name_ String containing name of the resource as appears in the shader source.
+/// \param type_ Type of the resource.
+///              Supported values: GL_IMAGE_2D, GL_ATOMIC_COUNTER_BUFFER, GL_SHADER_STORAGE_BUFFER
+#define COMPUTE_LIB_RESOURCE_NEW(name_, type_) ((compute_lib_resource_t) {.name = (name_), .type = (type_), .value = -1})
 
 /// Macro for initialization of new GLES32ComputeLib framebuffer instance.
 /// \param attachment_ Attachment point of the framebuffer.
@@ -198,24 +221,17 @@ typedef struct compute_lib_uniform_s {
 #define COMPUTE_LIB_FRAMEBUFFER_NEW(attachment_) ((compute_lib_framebuffer_t) {.handle = 0, .attachment = (attachment_)})
 
 /// Macro for initialization of new GLES32ComputeLib 2D image instance.
-/// \param uniform_name_ String containing uniform name of the 2D image as appears in the shader source.
+/// \param name_ String containing uniform name of the 2D image as appears in the shader source.
 /// \param texture_ Texture unit number.
 ///                   Possible values: GL_TEXTUREi with i ranging from 0 to GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS-1.
 /// \param width_ 2D image width in pixels.
 /// \param height_ 2D image height in pixels.
-/// \param internal_format_ Internal image format to be used when performing formatted loads and stores into the image from shaders.
-///                           Possible values: GL_RGBA32F, GL_RGBA16F, GL_R32F, GL_RGBA32UI, GL_RGBA16UI, GL_RGBA8UI, GL_R32UI, GL_RGBA32I, GL_RGBA16I, GL_RGBA8I, GL_R32I, GL_RGBA8, GL_RGBA8_SNORM.
 /// \param access_ Access type to be performed by shaders. Violations will lead to undefined results, possibly including program termination.
 ///                  Possible values: GL_READ_ONLY, GL_WRITE_ONLY, GL_READ_WRITE.
-/// \param texture_wrap_ Wrap parameter for both of texture coordinates.
-///                        Possible values: GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, GL_REPEAT, GL_CLAMP_TO_BORDER.
-/// \param texture_filter_ Filter type for texture magnification and minifying functions.
-///                          Possible values: GL_NEAREST, GL_LINEAR.
-/// \param format_ Format of the pixel data provided to the shader.
-///                  Possible values: GL_RED, GL_RED_INTEGER, GL_RG, GL_RG_INTEGER, GL_RGB, GL_RGB_INTEGER, GL_RGBA, GL_RGBA_INTEGER, GL_DEPTH_COMPONENT, GL_DEPTH_STENCIL, GL_LUMINANCE_ALPHA, GL_LUMINANCE, GL_ALPHA.
+/// \param num_components_ Number of components of the pixel, ranging from 1 (RED) to 4 (RGBA).
 /// \param type_ Data type of the pixel data.
 ///                Possible values: GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_SHORT, GL_SHORT, GL_UNSIGNED_INT, GL_INT, GL_HALF_FLOAT, GL_FLOAT, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_5_5_5_1, GL_UNSIGNED_INT_2_10_10_10_REV, GL_UNSIGNED_INT_10F_11F_11F_REV, GL_UNSIGNED_INT_5_9_9_9_REV, GL_UNSIGNED_INT_24_8, GL_FLOAT_32_UNSIGNED_INT_24_8_REV.
-#define COMPUTE_LIB_IMAGE2D_NEW(uniform_name_, texture_, width_, height_, internal_format_, access_, texture_wrap_, texture_filter_, format_, type_) ((compute_lib_image2d_t) {.uniform_name = (uniform_name_), .texture = (texture_), .width = (width_), .height = (height_), .internal_format = (internal_format_), .access = (access_), .texture_wrap = (texture_wrap_), .texture_filter = (texture_filter_), .format = (format_), .type = (type_), .handle = 0, .location = 0, .data_size = 0, .px_size = 0, .framebuffer = COMPUTE_LIB_FRAMEBUFFER_NEW(0)})
+#define COMPUTE_LIB_IMAGE2D_NEW(name_, texture_, width_, height_, access_, num_components_, type_) ((compute_lib_image2d_t) {.resource = COMPUTE_LIB_RESOURCE_NEW(name_, GL_IMAGE_2D), .texture = (texture_), .width = (width_), .height = (height_), .internal_format = 0, .compatibility_format = 0, .access = (access_), .texture_wrap = GL_CLAMP_TO_EDGE, .texture_filter = GL_LINEAR, .num_components = (num_components_), .format = 0, .type = (type_), .handle = 0, .data_size = 0, .px_size = 0, .framebuffer = COMPUTE_LIB_FRAMEBUFFER_NEW(0)})
 
 /// Macro for initialization of new GLES32ComputeLib shader storage buffer object (SSBO) instance.
 /// \param name_ String containing name of the SSBO as appears in the shader source.
@@ -223,7 +239,7 @@ typedef struct compute_lib_uniform_s {
 ///                Possible values: GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT.
 /// \param usage_ Expected usage type of the SSBO.
 ///                 Possible values: GL_STREAM_DRAW, GL_STREAM_READ, GL_STREAM_COPY, GL_STATIC_DRAW, GL_STATIC_READ, GL_STATIC_COPY, GL_DYNAMIC_DRAW, GL_DYNAMIC_READ, GL_DYNAMIC_COPY.
-#define COMPUTE_LIB_SSBO_NEW(name_, type_, usage_) ((compute_lib_ssbo_t) {.name = (name_), .type = (type_), .usage = (usage_), .handle = 0, .index = 0, .binding = 0})
+#define COMPUTE_LIB_SSBO_NEW(name_, type_, usage_) ((compute_lib_ssbo_t) {.resource = COMPUTE_LIB_RESOURCE_NEW(name_, GL_SHADER_STORAGE_BUFFER), .type = (type_), .usage = (usage_), .handle = 0})
 
 /// Macro for initialization of new GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \param name_ String containing name of the ACBO as appears in the shader source.
@@ -231,7 +247,7 @@ typedef struct compute_lib_uniform_s {
 ///                Possible values: GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT.
 /// \param usage_ Expected usage type of the ACBO.
 ///                 Possible values: GL_STREAM_DRAW, GL_STREAM_READ, GL_STREAM_COPY, GL_STATIC_DRAW, GL_STATIC_READ, GL_STATIC_COPY, GL_DYNAMIC_DRAW, GL_DYNAMIC_READ, GL_DYNAMIC_COPY.
-#define COMPUTE_LIB_ACBO_NEW(name_, type_, usage_) ((compute_lib_acbo_t) {.name = (name_), .type = (type_), .usage = (usage_), .handle = 0, .index = 0})
+#define COMPUTE_LIB_ACBO_NEW(name_, type_, usage_) ((compute_lib_acbo_t) {.resource = COMPUTE_LIB_RESOURCE_NEW(name_, GL_ATOMIC_COUNTER_BUFFER), .type = (type_), .usage = (usage_), .handle = 0})
 
 /// Macro for initialization of new GLES32ComputeLib uniform instance.
 /// \param name_ String containing name of the uniform as appears in the shader source.
@@ -288,31 +304,24 @@ void compute_lib_print_error(GLint err_code, FILE* out);
 /// \return Number of captured OpenGL errors.
 GLuint compute_lib_program_init(compute_lib_program_t* program);
 
-/// Prints OpenGL program log to the provided output file stream.
-/// \param program Pointer to the GLES32ComputeLib program instance.
-/// \param out Output file stream.
-/// \return Number of captured OpenGL errors.
-GLuint compute_lib_program_print_log(compute_lib_program_t* program, FILE* out);
-
-/// Prints OpenGL shader program log to the provided output file stream.
-/// \param program Pointer to the GLES32ComputeLib program instance.
-/// \param out Output file stream.
-/// \return Number of captured OpenGL errors.
-GLuint compute_lib_program_print_shader_log(compute_lib_program_t* program, FILE* out);
-
 /// Prints available OpenGL program resources (uniforms, SSBOs, ACBOs) to the provided output file stream.
 /// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param out Output file stream.
 /// \return Number of captured OpenGL errors.
 GLuint compute_lib_program_print_resources(compute_lib_program_t* program, FILE* out);
 
-///
+/// Formats GLSL layout string for the source.
 /// \param program Pointer to the GLES32ComputeLib program instance.
-/// \param num_groups_x Number of parallel local worker units along x-axis.
-/// \param num_groups_y Number of parallel local worker units along y-axis.
-/// \param num_groups_z Number of parallel local worker units along z-axis.
+/// \return Allocated formatted string.
+GLchar* compute_lib_program_glsl_layout(compute_lib_program_t* program);
+
+/// Dispatches the compiled compute shader program.
+/// \param program Pointer to the GLES32ComputeLib program instance.
+/// \param size_x Size of the x-axis for parallel computation.
+/// \param size_y Size of the y-axis for parallel computation.
+/// \param size_z Size of the z-axis for parallel computation.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_program_dispatch(compute_lib_program_t* program, GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z);
+GLuint compute_lib_program_dispatch(compute_lib_program_t* program, GLuint size_x, GLuint size_y, GLuint size_z);
 
 /// Destroys GLES32ComputeLib program instance. Releases allocated resources.
 /// \param program Pointer to the GLES32ComputeLib program instance.
@@ -321,42 +330,52 @@ GLuint compute_lib_program_dispatch(compute_lib_program_t* program, GLuint num_g
 GLuint compute_lib_program_destroy(compute_lib_program_t* program, GLboolean free_source);
 
 
-/// Initializes GLES32ComputeLib framebuffer instance.
+/// Tries to find resource description using the provided compiled program.
 /// \param program Pointer to the GLES32ComputeLib program instance.
+/// \param resource Resource instance to be filled.
+/// \return Number of captured OpenGL errors.
+GLuint compute_lib_resource_find(compute_lib_program_t* program, compute_lib_resource_t* resource);
+
+
+/// Initializes GLES32ComputeLib framebuffer instance.
 /// \param framebuffer Pointer to the GLES32ComputeLib framebuffer instance.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_framebuffer_init(compute_lib_program_t* program, compute_lib_framebuffer_t* framebuffer);
+GLuint compute_lib_framebuffer_init(compute_lib_framebuffer_t* framebuffer);
 
 /// Destroys GLES32ComputeLib framebuffer instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param framebuffer Pointer to the GLES32ComputeLib framebuffer instance.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_framebuffer_destroy(compute_lib_program_t* program, compute_lib_framebuffer_t* framebuffer);
+GLuint compute_lib_framebuffer_destroy(compute_lib_framebuffer_t* framebuffer);
 
+
+/// Setups format by number of pixel components and pixel data type.
+/// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
+void compute_lib_image2d_setup_format(compute_lib_image2d_t* image2d);
 
 /// Initializes GLES32ComputeLib 2D image instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \param framebuffer_attachment Attachment point of the framebuffer. Use 0 if rendering (GPU to CPU transfer) is not planned.
 ///                               Possible values: GL_COLOR_ATTACHMENTi, GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL_ATTACHMENT.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_init(compute_lib_program_t* program, compute_lib_image2d_t* image2d, GLenum framebuffer_attachment);
+GLuint compute_lib_image2d_init(compute_lib_image2d_t* image2d, GLenum framebuffer_attachment);
+
+/// Formats GLSL 2D image layout string for the source.
+/// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
+/// \return Allocated formatted string.
+GLchar* compute_lib_image2d_glsl_layout(compute_lib_image2d_t* image2d);
 
 /// Destroys GLES32ComputeLib 2D image instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_destroy(compute_lib_program_t* program, compute_lib_image2d_t* image2d);
+GLuint compute_lib_image2d_destroy(compute_lib_image2d_t* image2d);
 
 /// Resets 2D image to a pixel value provided.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \param px_data Pixel value to be used for reset. Number of available bytes must match the image format.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_reset(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* px_data);
+GLuint compute_lib_image2d_reset(compute_lib_image2d_t* image2d, void* px_data);
 
 /// Resets a patch of 2D image to a pixel value provided.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \param px_data Pixel value to be used for reset. Number of available bytes must match the image format.
 /// \param x_min Lower bound of the x-coord interval (left patch edge).
@@ -364,24 +383,21 @@ GLuint compute_lib_image2d_reset(compute_lib_program_t* program, compute_lib_ima
 /// \param y_min Lower bound of the y-coord interval (top patch edge).
 /// \param y_max Upper bound of the y-coord interval (bottom patch edge).
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_reset_patch(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* px_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max);
+GLuint compute_lib_image2d_reset_patch(compute_lib_image2d_t* image2d, void* px_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max);
 
 /// Writes the complete 2D image (transfers from CPU to GPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \param image_data Image data to be written. Number of available bytes must match the image format and image dimensions.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_write(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* image_data);
+GLuint compute_lib_image2d_write(compute_lib_image2d_t* image2d, void* image_data);
 
 /// Renders and reads the complete 2D image (transfers from GPU to CPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \param image_data Image data to be read. Number of available bytes must match the image format and image dimensions.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_read(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* image_data);
+GLuint compute_lib_image2d_read(compute_lib_image2d_t* image2d, void* image_data);
 
 /// Reads (and optionally renders at first) a patch of the 2D image (transfers from GPU to CPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param image2d Pointer to the GLES32ComputeLib 2D image instance.
 /// \param image_data Image data to be read. Number of available bytes must match the image format and patch dimensions.
 /// \param x_min Lower bound of the x-coord interval (left patch edge).
@@ -390,83 +406,78 @@ GLuint compute_lib_image2d_read(compute_lib_program_t* program, compute_lib_imag
 /// \param y_max Upper bound of the y-coord interval (bottom patch edge).
 /// \param render If GL_TRUE, the 2D image will be (re-)rendered on the GPU.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_image2d_read_patch(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* image_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max, GLboolean render);
+GLuint compute_lib_image2d_read_patch(compute_lib_image2d_t* image2d, void* image_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max, GLboolean render);
 
 
 /// Initializes the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param acbo Pointer to the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \param data Initial data for the ACBO initialization. Use NULL to fill ACBO with zeros. Number of available bytes must match the ACBO format and length.
 /// \param len Number of ACBO elements to be initialized.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_acbo_init(compute_lib_program_t* program, compute_lib_acbo_t* acbo, void* data, GLint len);
+GLuint compute_lib_acbo_init(compute_lib_acbo_t* acbo, void* data, GLint len);
 
 /// Destroys the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param acbo Pointer to the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_acbo_destroy(compute_lib_program_t* program, compute_lib_acbo_t* acbo);
+GLuint compute_lib_acbo_destroy(compute_lib_acbo_t* acbo);
 
 /// Writes provided data to the ACBO instance (transfers CPU to GPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param acbo Pointer to the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \param data Data to be written to the ACBO. Number of available bytes must match the ACBO format and length.
 /// \param len Number of ACBO elements to be written.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_acbo_write(compute_lib_program_t* program, compute_lib_acbo_t* acbo, void* data, GLint len);
+GLuint compute_lib_acbo_write(compute_lib_acbo_t* acbo, void* data, GLint len);
 
 /// Writes provided unsigned integer to the ACBO instance (transfers CPU to GPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param acbo Pointer to the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \param value Unsigned integer value to be written.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_acbo_write_uint_val(compute_lib_program_t* program, compute_lib_acbo_t* acbo, GLuint value);
+GLuint compute_lib_acbo_write_uint_val(compute_lib_acbo_t* acbo, GLuint value);
 
 /// Reads data from the ACBO instance (transfers GPU to CPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param acbo Pointer to the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \param data Pointer to data to be read. Number of available bytes must match the ACBO format and length.
 /// \param len Number of ACBO elements to be read.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_acbo_read(compute_lib_program_t* program, compute_lib_acbo_t* acbo, void* data, GLint len);
+GLuint compute_lib_acbo_read(compute_lib_acbo_t* acbo, void* data, GLint len);
 
 /// Reads unsigned integer from the ACBO instance (transfers GPU to CPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param acbo Pointer to the GLES32ComputeLib atomic counter buffer object (ACBO) instance.
 /// \param value Pointer to the unsigned integer value to be read.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_acbo_read_uint_val(compute_lib_program_t* program, compute_lib_acbo_t* acbo, GLuint* value);
+GLuint compute_lib_acbo_read_uint_val(compute_lib_acbo_t* acbo, GLuint* value);
 
 
 /// Initializes the GLES32ComputeLib shader storage buffer object (SSBO) instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param ssbo Pointer to the GLES32ComputeLib shader storage buffer object (SSBO) instance.
 /// \param data Initial data for the SSBO initialization. Use NULL to fill SSBO with zeros. Number of available bytes must match the SSBO format and length.
 /// \param len Number of SSBO elements to be initialized.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_ssbo_init(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo, void* data, GLint len);
+GLuint compute_lib_ssbo_init(compute_lib_ssbo_t* ssbo, void* data, GLint len);
 
 /// Destroys the GLES32ComputeLib shader storage buffer object (SSBO) instance.
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param ssbo Pointer to the GLES32ComputeLib shader storage buffer object (SSBO) instance.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_ssbo_destroy(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo);
+GLuint compute_lib_ssbo_destroy(compute_lib_ssbo_t* ssbo);
+
+/// Formats GLSL SSBO layout string for the source.
+/// \param ssbo Pointer to the GLES32ComputeLib shader storage buffer object (SSBO) instance.
+/// \return Allocated formatted string.
+GLchar* compute_lib_ssbo_glsl_layout(compute_lib_ssbo_t* ssbo);
 
 /// Writes data to the SSBO instance (transfers CPU to GPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param ssbo Pointer to the GLES32ComputeLib shader storage buffer object (SSBO) instance.
 /// \param data Data to be written to the SSBO. Number of available bytes must match the SSBO format and length.
 /// \param len Number of SSBO elements to be written.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_ssbo_write(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo, void* data, GLint len);
+GLuint compute_lib_ssbo_write(compute_lib_ssbo_t* ssbo, void* data, GLint len);
 
 /// Read data from the SSBO instance (transfers GPU to CPU).
-/// \param program Pointer to the GLES32ComputeLib program instance.
 /// \param ssbo Pointer to the GLES32ComputeLib shader storage buffer object (SSBO) instance.
 /// \param data Data to be read from the SSBO. Number of available bytes must match the SSBO format and length.
 /// \param len Number of SSBO elements to be read.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_ssbo_read(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo, void* data, GLint len);
+GLuint compute_lib_ssbo_read(compute_lib_ssbo_t* ssbo, void* data, GLint len);
 
 
 /// Initializes the GLES32ComputeLib uniform instance.

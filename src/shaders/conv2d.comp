@@ -1,20 +1,23 @@
 #version 320 es
 
-#define LOCAL_SIZE_X %d
-#define LOCAL_SIZE_Y %d
+#define _MAIN_FN main()
 
-layout (local_size_x = LOCAL_SIZE_X, local_size_y = LOCAL_SIZE_Y, local_size_z = 1) in;
+#define LAYOUT_LOCAL_SIZE %s
+#define LAYOUT_INPUT_IMAGE2D %s
+#define LAYOUT_OUTPUT_IMAGE2D %s
+#define LAYOUT_KERNEL_SSBO %s
 
-layout(rgba8ui, binding = 0) readonly uniform highp uimage2D input_image2d;
-layout(rgba8ui, binding = 1) writeonly uniform highp uimage2D output_image2d;
-layout(std430, binding = 2) readonly buffer kernel_buffer { highp float kernel[]; };
+LAYOUT_LOCAL_SIZE;
+LAYOUT_INPUT_IMAGE2D;
+LAYOUT_OUTPUT_IMAGE2D;
+LAYOUT_KERNEL_SSBO;
 
-void main()
+void _MAIN_FN
 {
     ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
     ivec2 size_in = imageSize(input_image2d);
     ivec2 size_out = imageSize(output_image2d);
-    float kernel_size = sqrt(float(kernel.length()));
+    float kernel_size = sqrt(float(kernel_ssbo_data.length()));
     float res = 0.0f;
     int kernel_span, i, x, y;
 
@@ -31,7 +34,7 @@ void main()
         i = 0;
         for (y = -kernel_span; y <= kernel_span; y++) {
             for (x = -kernel_span; x <= kernel_span; x++) {
-                res += float(imageLoad(input_image2d, pos + ivec2(x, y)).r) * kernel[i];
+                res += float(imageLoad(input_image2d, pos + ivec2(x, y)).r) * kernel_ssbo_data[i];
                 i++;
             }
         }

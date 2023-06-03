@@ -2000,3 +2000,139 @@ GLuint gl32_get_image_format_num_components(GLenum format)
     }
 }
 
+GLenum gl32_get_image2d_compatibility_format(GLenum internal_format)
+{
+    switch(internal_format) {
+        case GL_R16F:
+        case GL_RG16F:
+        case GL_RGB16F:
+        case GL_RGBA16F:
+            return GL_RGBA16F;
+        case GL_R32F:
+            return GL_R32F;
+        case GL_RG32F:
+        case GL_RGB32F:
+        case GL_RGBA32F:
+            return GL_RGBA32F;
+        case GL_R8UI:
+        case GL_RG8UI:
+        case GL_RGB8UI:
+        case GL_RGBA8UI:
+            return GL_RGBA8UI;
+        case GL_R8I:
+        case GL_RG8I:
+        case GL_RGB8I:
+        case GL_RGBA8I:
+            return GL_RGBA8I;
+        case GL_R16UI:
+        case GL_RG16UI:
+        case GL_RGB16UI:
+        case GL_RGBA16UI:
+            return GL_RGBA16UI;
+        case GL_R16I:
+        case GL_RG16I:
+        case GL_RGB16I:
+        case GL_RGBA16I:
+            return GL_RGBA16I;
+        case GL_R32UI:
+            return GL_R32UI;
+        case GL_RG32UI:
+        case GL_RGB32UI:
+        case GL_RGBA32UI:
+            return GL_RGBA32UI;
+        case GL_R32I:
+            return GL_R32I;
+        case GL_RG32I:
+        case GL_RGB32I:
+        case GL_RGBA32I:
+            return GL_RGBA32I;
+        default:
+            return 0;
+    }
+}
+
+const GLchar* gl32_get_glsl_image2d_type(GLenum compatibility_format)
+{
+    switch(compatibility_format) {
+        case GL_RGBA32F:
+        case GL_RGBA16F:
+        case GL_R32F:
+        case GL_RGBA8:
+        case GL_RGBA8_SNORM:
+            return "image2D";
+        case GL_RGBA32UI:
+        case GL_RGBA16UI:
+        case GL_RGBA8UI:
+        case GL_R32UI:
+            return "uimage2D";
+        case GL_RGBA32I:
+        case GL_RGBA16I:
+        case GL_RGBA8I:
+        case GL_R32I:
+            return "iimage2D";
+        default:
+            return 0;
+    }
+}
+
+const GLchar* gl32_get_glsl_image2d_format_qualifier(GLenum compatibility_format)
+{
+    switch(compatibility_format) {
+        case GL_RGBA32F:
+            return "rgba32f";
+        case GL_RGBA16F:
+            return "rgba16f";
+        case GL_R32F:
+            return "r32f";
+        case GL_RGBA32UI:
+            return "rgba32ui";
+        case GL_RGBA16UI:
+            return "rgba16ui";
+        case GL_RGBA8UI:
+            return "rgba8ui";
+        case GL_R32UI:
+            return "r32ui";
+        case GL_RGBA32I:
+            return "rgba32i";
+        case GL_RGBA16I:
+            return "rgba16i";
+        case GL_RGBA8I:
+            return "rgba8i";
+        case GL_R32I:
+            return "r32i";
+        case GL_RGBA8:
+            return "rgba8";
+        case GL_RGBA8_SNORM:
+            return "rgba8_snorm";
+        default:
+            return 0;
+    }
+}
+
+const GLchar* gl32_get_glsl_image2d_access(GLenum access)
+{
+    switch(access) {
+        case GL_READ_ONLY:
+            return "readonly";
+        case GL_WRITE_ONLY:
+            return "writeonly";
+        case GL_READ_WRITE:
+            return "";
+        default:
+            return 0;
+    }
+}
+
+const GLchar* gl32_get_glsl_data_type(GLenum type)
+{
+    switch(type) {
+        case GL_UNSIGNED_INT:
+            return "uint";
+        case GL_INT:
+            return "int";
+        case GL_FLOAT:
+            return "float";
+        default:
+            return 0;
+    }
+}

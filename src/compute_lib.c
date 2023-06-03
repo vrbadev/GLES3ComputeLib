@@ -9,6 +9,7 @@
 static const EGLint egl_config_attribs[] = { EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR, EGL_NONE };
 static const EGLint egl_ctx_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
 
+
 /// OpenGL debug callback function (GLDEBUGPROC) pushing debug messages to the library instance's error queue.
 /// \param source The source of error message.
 ///                 Possible values: GL_DEBUG_SOURCE_API, GL_DEBUG_SOURCE_WINDOW_SYSTEM_, GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_SOURCE_OTHER.
@@ -24,13 +25,13 @@ static void compute_lib_gl_callback(GLenum source, GLenum type, GLuint id, GLenu
 {
     switch (severity) {
         case GL_DEBUG_SEVERITY_HIGH:
-            if (inst->verbosity == GL_DEBUG_SEVERITY_HIGH) break;
+            if (inst->verbosity == GL_DEBUG_SEVERITY_HIGH || inst->verbosity == 1) break;
         case GL_DEBUG_SEVERITY_MEDIUM:
-            if (inst->verbosity == GL_DEBUG_SEVERITY_MEDIUM) break;
+            if (inst->verbosity == GL_DEBUG_SEVERITY_MEDIUM || inst->verbosity == 2) break;
         case GL_DEBUG_SEVERITY_LOW:
-            if (inst->verbosity == GL_DEBUG_SEVERITY_LOW) break;
+            if (inst->verbosity == GL_DEBUG_SEVERITY_LOW || inst->verbosity == 3) break;
         case GL_DEBUG_SEVERITY_NOTIFICATION:
-            if (inst->verbosity == GL_DEBUG_SEVERITY_NOTIFICATION) break;
+            if (inst->verbosity == GL_DEBUG_SEVERITY_NOTIFICATION || inst->verbosity == 4) break;
         default:
             return;
     }
@@ -49,6 +50,56 @@ static void compute_lib_gl_callback(GLenum source, GLenum type, GLuint id, GLenu
     queue_push(inst->error_queue, (void*) err);
     inst->error_total_cnt++;
     inst->last_error = err;
+}
+
+
+/// Pushes lines from OpenGL program log to the library instance's error queue.
+/// \param program Pointer to the GLES32ComputeLib program instance.
+/// \return Number of captured OpenGL errors.
+static GLuint compute_lib_program_log_to_queue(compute_lib_program_t* program)
+{
+    if (program->handle == 0) return 0;
+    GLint log_len = 0;
+    glGetProgramiv(program->handle, GL_INFO_LOG_LENGTH, &log_len);
+    GLchar* log_str;
+    int processed = 0;
+    if (log_len > 0) {
+        log_str = (GLchar *) calloc(log_len, sizeof(GLchar));
+        glGetProgramInfoLog(program->handle, log_len, NULL, log_str);
+        for (int i = 0; i < log_len; i++) {
+            if (i == log_len-1 || log_str[i] == '\n') {
+                compute_lib_gl_callback(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0, GL_DEBUG_SEVERITY_HIGH, i - processed, &(log_str[processed]), program->lib_inst);
+                processed = ++i;
+            }
+        }
+        free(log_str);
+    }
+    return compute_lib_gl_errors_count();
+}
+
+
+/// Pushes lines from OpenGL shader log to the library instance's error queue.
+/// \param program Pointer to the GLES32ComputeLib program instance.
+/// \return Number of captured OpenGL errors.
+static GLuint compute_lib_program_shader_log_to_queue(compute_lib_program_t* program)
+{
+    if (program->shader_handle == 0) return 0;
+    GLint log_len = 0;
+    glGetShaderiv(program->shader_handle, GL_INFO_LOG_LENGTH, &log_len);
+    GLchar* log_str;
+    int processed = 0;
+    if (log_len > 0) {
+        log_str = (GLchar *) calloc(log_len, sizeof(GLchar));
+        glGetShaderInfoLog(program->shader_handle, log_len, NULL, log_str);
+        for (int i = 0; i < log_len; i++) {
+            if (i == log_len-1 || log_str[i] == '\n') {
+                compute_lib_gl_callback(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DEBUG_TYPE_ERROR, 0, GL_DEBUG_SEVERITY_HIGH, i - processed, &(log_str[processed]), program->lib_inst);
+                processed = ++i;
+            }
+        }
+        free(log_str);
+    }
+    return compute_lib_gl_errors_count();
 }
 
 GLuint compute_lib_init(compute_lib_instance_t* inst)
@@ -116,8 +167,10 @@ GLuint compute_lib_init(compute_lib_instance_t* inst)
     inst->error_total_cnt = 0;
     inst->error_queue = queue_create(64);
 
+#ifdef GL_ES_VERSION_3_2
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback((GLDEBUGPROC) compute_lib_gl_callback, (const void*) inst);
+#endif
 
     inst->initialised = GL_TRUE;
 
@@ -231,81 +284,61 @@ GLuint compute_lib_gl_errors_count(void)
 
 GLuint compute_lib_program_init(compute_lib_program_t* program)
 {
+    GLuint errors_cnt;
 
     program->shader_handle = glCreateShader(GL_COMPUTE_SHADER);
-    if (glGetError() != GL_NO_ERROR) {
-        return compute_lib_program_destroy(program, GL_FALSE);
+    if ((errors_cnt = glGetError()) != GL_NO_ERROR) {
+        goto process_errors;
     }
 
     glShaderSource(program->shader_handle, 1, (const GLchar* const *) &(program->source), NULL);
-    if (glGetError() != GL_NO_ERROR) {
-        return compute_lib_program_destroy(program, GL_FALSE);
+    if ((errors_cnt = glGetError()) != GL_NO_ERROR) {
+        goto process_errors;
     }
 
     GLsizei len;
     GLint is_compiled;
     glCompileShader(program->shader_handle);
     glGetShaderiv(program->shader_handle, GL_COMPILE_STATUS, &is_compiled);
-    if (glGetError() != GL_NO_ERROR || is_compiled != GL_TRUE) {
-        return compute_lib_program_destroy(program, GL_FALSE) | !is_compiled;
+    if ((errors_cnt = glGetError()) != GL_NO_ERROR || is_compiled != GL_TRUE) {
+        errors_cnt += !is_compiled;
+        goto process_errors;
     }
 
     program->handle = glCreateProgram();
     if (program->handle == 0) {
-        return compute_lib_program_destroy(program, GL_FALSE);
+        goto process_errors;
     }
 
     glAttachShader(program->handle, program->shader_handle);
-    if (glGetError() != GL_NO_ERROR) {
-        return compute_lib_program_destroy(program, GL_FALSE);
+    if ((errors_cnt = glGetError()) != GL_NO_ERROR) {
+        goto process_errors;
     }
 
     GLint is_linked;
     glLinkProgram(program->handle);
     glGetProgramiv(program->handle, GL_LINK_STATUS, &is_linked);
-    if (glGetError() != GL_NO_ERROR || is_linked != GL_TRUE) {
-        return compute_lib_program_destroy(program, GL_FALSE) | !is_linked;
+    if ((errors_cnt = glGetError()) != GL_NO_ERROR || is_linked != GL_TRUE) {
+        errors_cnt += !is_linked;
+        goto process_errors;
     }
 
-    if (glGetError() != GL_NO_ERROR) {
-        return compute_lib_program_destroy(program, GL_FALSE);
+process_errors:
+    if (errors_cnt != GL_NO_ERROR) {
+#ifndef GL_ES_VERSION_3_2
+        compute_lib_program_log_to_queue(program);
+        compute_lib_program_shader_log_to_queue(program);
+#endif
+        return compute_lib_program_destroy(program, GL_FALSE) + errors_cnt;
     }
 
-    return compute_lib_gl_errors_count();
+    return GL_NO_ERROR;
 }
 
-GLuint compute_lib_program_print_log(compute_lib_program_t* program, FILE* out)
-{
-    if (program->handle == 0) return 0;
-    GLint output_len = 0;
-    glGetProgramiv(program->handle, GL_INFO_LOG_LENGTH, &output_len);
-    if (output_len > 0) {
-        GLchar *output_str = (GLchar *) calloc(output_len, sizeof(GLchar));
-        glGetProgramInfoLog(program->handle, output_len, NULL, output_str);
-        fprintf(out, "%.*s", output_len, output_str);
-        free(output_str);
-    }
-    return compute_lib_gl_errors_count();
-}
-
-GLuint compute_lib_program_print_shader_log(compute_lib_program_t* program, FILE* out)
-{
-    if (program->shader_handle == 0) return 0;
-    GLint output_len = 0;
-    glGetShaderiv(program->shader_handle, GL_INFO_LOG_LENGTH, &output_len);
-    if (output_len > 0) {
-        GLchar* output_str = (GLchar*) calloc(output_len, sizeof(GLchar));
-        glGetShaderInfoLog(program->shader_handle, output_len, NULL, output_str);
-        fprintf(out, "%.*s", output_len, output_str);
-        free(output_str);
-    }
-    return compute_lib_gl_errors_count();
-}
-
-GLuint compute_lib_program_dispatch(compute_lib_program_t* program, GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z)
+GLuint compute_lib_program_dispatch(compute_lib_program_t* program, GLuint size_x, GLuint size_y, GLuint size_z)
 {
     glUseProgram(program->handle);
-    glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+    glDispatchCompute(size_x / program->local_size_x, size_y / program->local_size_y, size_z / program->local_size_z);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
     glUseProgram(0);
     return compute_lib_gl_errors_count();
@@ -379,6 +412,13 @@ GLuint compute_lib_program_print_resources(compute_lib_program_t* program, FILE*
     return compute_lib_gl_errors_count();
 }
 
+GLchar* compute_lib_program_glsl_layout(compute_lib_program_t* program)
+{
+    char* str;
+    asprintf(&str, "layout (local_size_x = %d, local_size_y = %d, local_size_z = %d) in", program->local_size_x, program->local_size_y, program->local_size_z);
+    return str;
+}
+
 GLuint compute_lib_program_destroy(compute_lib_program_t* program, GLboolean free_source)
 {
     if (free_source) {
@@ -396,13 +436,39 @@ GLuint compute_lib_program_destroy(compute_lib_program_t* program, GLboolean fre
 }
 
 
-GLuint compute_lib_framebuffer_init(compute_lib_program_t* program, compute_lib_framebuffer_t* framebuffer)
+GLuint compute_lib_resource_find(compute_lib_program_t* program, compute_lib_resource_t* resource)
+{
+    if (resource->value >= 0) {
+        return 0;
+    }
+    GLenum binding_prop = GL_BUFFER_BINDING;
+    GLuint index;
+    switch (resource->type) {
+        case GL_IMAGE_2D:
+            resource->value = glGetUniformLocation(program->handle, resource->name);
+            break;
+        case GL_ATOMIC_COUNTER_BUFFER:
+            resource->value = (GLint) glGetProgramResourceIndex(program->handle, GL_UNIFORM, resource->name);
+            break;
+        case GL_SHADER_STORAGE_BUFFER:
+            index = glGetProgramResourceIndex(program->handle, GL_SHADER_STORAGE_BLOCK, resource->name);
+            glGetProgramResourceiv(program->handle, GL_SHADER_STORAGE_BLOCK, index, 1, &binding_prop, sizeof(GLint), NULL, &(resource->value));
+            break;
+        default:
+            return (GLuint) -1;
+    }
+    return compute_lib_gl_errors_count();
+}
+
+
+
+GLuint compute_lib_framebuffer_init(compute_lib_framebuffer_t* framebuffer)
 {
     glGenFramebuffers(1, &(framebuffer->handle));
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_framebuffer_destroy(compute_lib_program_t* program, compute_lib_framebuffer_t* framebuffer)
+GLuint compute_lib_framebuffer_destroy(compute_lib_framebuffer_t* framebuffer)
 {
     if (framebuffer->handle != 0) {
         glDeleteFramebuffers(1, &(framebuffer->handle));
@@ -410,10 +476,175 @@ GLuint compute_lib_framebuffer_destroy(compute_lib_program_t* program, compute_l
     return compute_lib_gl_errors_count();
 }
 
-
-GLuint compute_lib_image2d_init(compute_lib_program_t* program, compute_lib_image2d_t* image2d, GLenum framebuffer_attachment)
+void compute_lib_image2d_setup_format(compute_lib_image2d_t* image2d)
 {
-    image2d->location = glGetUniformLocation(program->handle, image2d->uniform_name);
+    switch (image2d->type) {
+        case GL_UNSIGNED_BYTE:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R8UI;
+                    image2d->format = GL_RED_INTEGER;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG8UI;
+                    image2d->format = GL_RG_INTEGER;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB8UI;
+                    image2d->format = GL_RGB_INTEGER;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA8UI;
+                    image2d->format = GL_RGBA_INTEGER;
+                    break;
+            }
+            break;
+        case GL_BYTE:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R8I;
+                    image2d->format = GL_RED_INTEGER;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG8I;
+                    image2d->format = GL_RG_INTEGER;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB8I;
+                    image2d->format = GL_RGB_INTEGER;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA8I;
+                    image2d->format = GL_RGBA_INTEGER;
+                    break;
+            }
+            break;
+        case GL_UNSIGNED_SHORT:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R16UI;
+                    image2d->format = GL_RED_INTEGER;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG16UI;
+                    image2d->format = GL_RG_INTEGER;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB16UI;
+                    image2d->format = GL_RGB_INTEGER;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA16UI;
+                    image2d->format = GL_RGBA_INTEGER;
+                    break;
+            }
+            break;
+        case GL_SHORT:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R16I;
+                    image2d->format = GL_RED_INTEGER;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG16I;
+                    image2d->format = GL_RG_INTEGER;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB16I;
+                    image2d->format = GL_RGB_INTEGER;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA16I;
+                    image2d->format = GL_RGBA_INTEGER;
+                    break;
+            }
+            break;
+        case GL_UNSIGNED_INT:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R32UI;
+                    image2d->format = GL_RED_INTEGER;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG32UI;
+                    image2d->format = GL_RG_INTEGER;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB32UI;
+                    image2d->format = GL_RGB_INTEGER;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA32UI;
+                    image2d->format = GL_RGBA_INTEGER;
+                    break;
+            }
+            break;
+        case GL_INT:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R32I;
+                    image2d->format = GL_RED_INTEGER;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG32I;
+                    image2d->format = GL_RG_INTEGER;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB32I;
+                    image2d->format = GL_RGB_INTEGER;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA32I;
+                    image2d->format = GL_RGBA_INTEGER;
+                    break;
+            }
+            break;
+        case GL_HALF_FLOAT:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R16F;
+                    image2d->format = GL_RED;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG16F;
+                    image2d->format = GL_RG;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB16F;
+                    image2d->format = GL_RGB;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA16F;
+                    image2d->format = GL_RGBA;
+                    break;
+            }
+            break;
+        case GL_FLOAT:
+            switch (image2d->num_components) {
+                case 1:
+                    image2d->internal_format = GL_R32F;
+                    image2d->format = GL_RED;
+                    break;
+                case 2:
+                    image2d->internal_format = GL_RG32F;
+                    image2d->format = GL_RG;
+                    break;
+                case 3:
+                    image2d->internal_format = GL_RGB32F;
+                    image2d->format = GL_RGB;
+                    break;
+                case 4:
+                    image2d->internal_format = GL_RGBA32F;
+                    image2d->format = GL_RGBA;
+                    break;
+            }
+            break;
+    }
+    image2d->compatibility_format = gl32_get_image2d_compatibility_format(image2d->internal_format);
+}
+
+GLuint compute_lib_image2d_init(compute_lib_image2d_t* image2d, GLenum framebuffer_attachment)
+{
     glGenTextures(1, &(image2d->handle));
     glActiveTexture(image2d->texture);
     glBindTexture(GL_TEXTURE_2D, image2d->handle);
@@ -423,23 +654,29 @@ GLuint compute_lib_image2d_init(compute_lib_program_t* program, compute_lib_imag
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, image2d->texture_filter);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, image2d->texture_filter);
     glTexStorage2D(GL_TEXTURE_2D, 1, image2d->internal_format, image2d->width, image2d->height);
-    glBindImageTexture(image2d->location, image2d->handle, 0, GL_FALSE, 0, image2d->access, image2d->internal_format);
+    glBindImageTexture(image2d->resource.value, image2d->handle, 0, GL_FALSE, 0, image2d->access, image2d->compatibility_format);
     size_t type_size = gl32_get_type_size(image2d->type);
-    GLuint num_ch = gl32_get_image_format_num_components(image2d->format);
-    image2d->px_size = type_size * num_ch;
+    image2d->px_size = type_size * image2d->num_components;
     image2d->data_size = image2d->px_size * image2d->width * image2d->height;
     if (framebuffer_attachment != 0) {
         image2d->framebuffer.attachment = framebuffer_attachment;
-        compute_lib_framebuffer_init(program, &(image2d->framebuffer));
+        compute_lib_framebuffer_init(&(image2d->framebuffer));
         glBindFramebuffer(GL_FRAMEBUFFER, image2d->framebuffer.handle);
         glFramebufferTexture2D(GL_FRAMEBUFFER, framebuffer_attachment, GL_TEXTURE_2D, image2d->handle, 0);
     }
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_image2d_destroy(compute_lib_program_t* program, compute_lib_image2d_t* image2d)
+GLchar* compute_lib_image2d_glsl_layout(compute_lib_image2d_t* image2d)
 {
-    compute_lib_framebuffer_destroy(program, &(image2d->framebuffer));
+    char* str;
+    asprintf(&str, "layout(%s, binding=%d) %s uniform highp %s %s", gl32_get_glsl_image2d_format_qualifier(image2d->compatibility_format), image2d->resource.value, gl32_get_glsl_image2d_access(image2d->access), gl32_get_glsl_image2d_type(image2d->compatibility_format), image2d->resource.name);
+    return str;
+}
+
+GLuint compute_lib_image2d_destroy(compute_lib_image2d_t* image2d)
+{
+    compute_lib_framebuffer_destroy(&(image2d->framebuffer));
     glDeleteTextures(1, &(image2d->handle));
     return compute_lib_gl_errors_count();
 }
@@ -452,7 +689,7 @@ static inline void* compute_lib_image2d_alloc(compute_lib_image2d_t* image2d)
     return malloc(image2d->data_size);
 }
 
-GLuint compute_lib_image2d_reset(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* px_data)
+GLuint compute_lib_image2d_reset(compute_lib_image2d_t* image2d, void* px_data)
 {
     GLint i;
     void* image_data = compute_lib_image2d_alloc(image2d);
@@ -465,7 +702,7 @@ GLuint compute_lib_image2d_reset(compute_lib_program_t* program, compute_lib_ima
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_image2d_reset_patch(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* px_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max)
+GLuint compute_lib_image2d_reset_patch(compute_lib_image2d_t* image2d, void* px_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max)
 {
     GLint patch_width = x_max - x_min;
     GLint patch_height = y_max - y_min;
@@ -482,14 +719,14 @@ GLuint compute_lib_image2d_reset_patch(compute_lib_program_t* program, compute_l
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_image2d_write(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* image_data)
+GLuint compute_lib_image2d_write(compute_lib_image2d_t* image2d, void* image_data)
 {
     glBindTexture(GL_TEXTURE_2D, image2d->handle);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image2d->width, image2d->height, image2d->format, image2d->type, image_data);
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_image2d_read(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* image_data)
+GLuint compute_lib_image2d_read(compute_lib_image2d_t* image2d, void* image_data)
 {
     if (image2d->framebuffer.handle != 0) {
         glBindTexture(GL_TEXTURE_2D, image2d->handle);
@@ -500,7 +737,7 @@ GLuint compute_lib_image2d_read(compute_lib_program_t* program, compute_lib_imag
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_image2d_read_patch(compute_lib_program_t* program, compute_lib_image2d_t* image2d, void* image_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max, GLboolean render)
+GLuint compute_lib_image2d_read_patch(compute_lib_image2d_t* image2d, void* image_data, GLint x_min, GLint x_max, GLint y_min, GLint y_max, GLboolean render)
 {
     if (image2d->framebuffer.handle != 0) {
         glBindTexture(GL_TEXTURE_2D, image2d->handle);
@@ -521,36 +758,35 @@ GLuint compute_lib_image2d_read_patch(compute_lib_program_t* program, compute_li
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_acbo_init(compute_lib_program_t* program, compute_lib_acbo_t* acbo, void* data, GLint len)
+GLuint compute_lib_acbo_init(compute_lib_acbo_t* acbo, void* data, GLint len)
 {
     glGenBuffers(1, &(acbo->handle));
-    acbo->index = glGetProgramResourceIndex(program->handle, GL_UNIFORM, acbo->name);
-    if (len > 0) compute_lib_acbo_write(program, acbo, data, len);
+    if (len > 0) compute_lib_acbo_write(acbo, data, len);
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_acbo_destroy(compute_lib_program_t* program, compute_lib_acbo_t* acbo)
+GLuint compute_lib_acbo_destroy(compute_lib_acbo_t* acbo)
 {
     glDeleteBuffers(1, &(acbo->handle));
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_acbo_write(compute_lib_program_t* program, compute_lib_acbo_t* acbo, void* data, GLint len)
+GLuint compute_lib_acbo_write(compute_lib_acbo_t* acbo, void* data, GLint len)
 {
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, acbo->handle);
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, gl32_get_type_size(acbo->type)*len, data, acbo->usage);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, acbo->index, acbo->handle);
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, acbo->resource.value, acbo->handle);
     //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, gl32_get_type_size(acbo->type)*len, data);
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_acbo_write_uint_val(compute_lib_program_t* program, compute_lib_acbo_t* acbo, GLuint value)
+GLuint compute_lib_acbo_write_uint_val(compute_lib_acbo_t* acbo, GLuint value)
 {
-    compute_lib_acbo_write(program, acbo, (uint8_t*) &value, 1);
+    compute_lib_acbo_write(acbo, (uint8_t*) &value, 1);
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_acbo_read(compute_lib_program_t* program, compute_lib_acbo_t* acbo, void* data, GLint len)
+GLuint compute_lib_acbo_read(compute_lib_acbo_t* acbo, void* data, GLint len)
 {
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, acbo->handle);
     GLsizei size = gl32_get_type_size(acbo->type)*len;
@@ -559,39 +795,43 @@ GLuint compute_lib_acbo_read(compute_lib_program_t* program, compute_lib_acbo_t*
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_acbo_read_uint_val(compute_lib_program_t* program, compute_lib_acbo_t* acbo, GLuint* value)
+GLuint compute_lib_acbo_read_uint_val(compute_lib_acbo_t* acbo, GLuint* value)
 {
-    compute_lib_acbo_read(program, acbo, (void*) value, 1);
+    compute_lib_acbo_read(acbo, (void*) value, 1);
     return compute_lib_gl_errors_count();
 }
 
 
-GLuint compute_lib_ssbo_init(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo, void* data, GLint len)
+GLuint compute_lib_ssbo_init(compute_lib_ssbo_t* ssbo, void* data, GLint len)
 {
-    GLenum binding_prop = GL_BUFFER_BINDING;
     glGenBuffers(1, &(ssbo->handle));
-    ssbo->index = glGetProgramResourceIndex(program->handle, GL_SHADER_STORAGE_BLOCK, ssbo->name);
-    glGetProgramResourceiv(program->handle, GL_SHADER_STORAGE_BLOCK, ssbo->index, 1, &binding_prop, sizeof(ssbo->binding), NULL, &(ssbo->binding));
-    if (len > 0) compute_lib_ssbo_write(program, ssbo, data, len);
+    if (len > 0) compute_lib_ssbo_write(ssbo, data, len);
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_ssbo_destroy(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo)
+GLuint compute_lib_ssbo_destroy(compute_lib_ssbo_t* ssbo)
 {
     glDeleteBuffers(1, &(ssbo->handle));
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_ssbo_write(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo, void* data, GLint len)
+GLchar* compute_lib_ssbo_glsl_layout(compute_lib_ssbo_t* ssbo)
+{
+    char* str;
+    asprintf(&str, "layout(std430, binding=%d) buffer %s { %s %s_data[]; }", ssbo->resource.value, ssbo->resource.name, gl32_get_glsl_data_type(ssbo->type), ssbo->resource.name);
+    return str;
+}
+
+GLuint compute_lib_ssbo_write(compute_lib_ssbo_t* ssbo, void* data, GLint len)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo->handle);
     glBufferData(GL_SHADER_STORAGE_BUFFER, gl32_get_type_size(ssbo->type)*len, data, ssbo->usage);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo->binding, ssbo->handle);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo->resource.value, ssbo->handle);
     //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, gl32_get_type_size(ssbo->type)*len, data);
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_ssbo_read(compute_lib_program_t* program, compute_lib_ssbo_t* ssbo, void* data, GLint len)
+GLuint compute_lib_ssbo_read(compute_lib_ssbo_t* ssbo, void* data, GLint len)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo->handle);
     GLint size = gl32_get_type_size(ssbo->type)*len;

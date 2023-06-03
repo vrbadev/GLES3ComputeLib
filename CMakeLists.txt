@@ -12,6 +12,10 @@ find_library (LIBM libm.so REQUIRED)
 # Include required library headers
 include_directories (inc ${OpenGL_LIBRARIES} ${LIBGBM_LIBRARIES})
 
+# Select proper OpenGL ES version available on the system
+# Possible values: OPENGL_ES_31 or OPENGL_ES_32
+add_compile_definitions(OPENGL_ES_31)
+
 # Find all GLSL shader sources and add object targets to be appended to the final library binary
 file (GLOB_RECURSE SHADER_FILES_PATHS CONFIGURE_DEPENDS "*.comp" "*.vert" "*.frag" "*.tess" "*.geom" "*.glsl")
 set (SHADER_OBJECTS)

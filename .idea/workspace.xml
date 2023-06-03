@@ -22,8 +22,19 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="37e853df-e957-4112-b096-887cb9526ada" name="Changes" comment="First library release.">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="37e853df-e957-4112-b096-887cb9526ada" name="Changes" comment="Upgraded queue implementation circular with additional resizing factors.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/compute_lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/compute_lib.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/gl32_utils.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/gl32_utils.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/queue.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/queue.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/shaders/conv2d.h" beforeDir="false" afterPath="$PROJECT_DIR$/inc/shaders/conv2d.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/libGLES32ComputeLib.a" beforeDir="false" afterPath="$PROJECT_DIR$/out/libGLES32ComputeLib.a" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/compute_lib.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/compute_lib.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gl32_utils.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/gl32_utils.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/queue.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/queue.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/shaders/conv2d.comp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shaders/conv2d.comp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/test_conv2d.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/test_conv2d.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,24 +69,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/lib",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.sourceCode.C/C++",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/mnt/SHARED/MEGA/WORKSPACES/CLionProjects/GLES32ComputeLib/lib&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode.C/C++&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/lib" />
@@ -91,11 +102,6 @@
       <method v="2" />
     </configuration>
     <configuration name="GLES32ComputeLib" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GLES32ComputeLib" TARGET_NAME="GLES32ComputeLib" CONFIG_NAME="Debug">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -130,6 +136,9 @@
       <workItem from="1683285478015" duration="14258000" />
       <workItem from="1683380530038" duration="5253000" />
       <workItem from="1683385830997" duration="1543000" />
+      <workItem from="1683551106180" duration="13254000" />
+      <workItem from="1683615410469" duration="7732000" />
+      <workItem from="1685791332033" duration="4966000" />
     </task>
     <task id="LOCAL-00001" summary="First library release.">
       <created>1683387341130</created>
@@ -153,6 +162,13 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="First library release." />
     <option name="LAST_COMMIT_MESSAGE" value="First library release." />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="CMakeRunConfiguration">
+        <watch expression="*err-&gt;message @ &lt;Enter Size&gt;" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

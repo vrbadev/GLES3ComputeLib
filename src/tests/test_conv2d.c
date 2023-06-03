@@ -51,18 +51,18 @@ int main(int argc, char* argv[])
     }
 
     printf("Running conv2d program.\r\n");
-    if (compute_lib_image2d_write(&(conv2d->program), &(conv2d->input_image2d), input_img_data) != GL_NO_ERROR) {
+    if (compute_lib_image2d_write(&(conv2d->input_image2d), input_img_data) != GL_NO_ERROR) {
         compute_lib_error_queue_flush(&inst, stderr);
         return 5;
     }
-    if (compute_lib_program_dispatch(&(conv2d->program), width / LOCAL_SIZE_X, height / LOCAL_SIZE_Y, 1) != GL_NO_ERROR) {
+    if (compute_lib_program_dispatch(&(conv2d->program), width, height, 1) != GL_NO_ERROR) {
         compute_lib_error_queue_flush(&inst, stderr);
         return 6;
     }
 
     rgba_t* output_img_data = (rgba_t*) calloc(width*height, sizeof(rgba_t));
 
-    if (compute_lib_image2d_read(&(conv2d->program), &(conv2d->output_image2d), output_img_data) != GL_NO_ERROR) {
+    if (compute_lib_image2d_read(&(conv2d->output_image2d), output_img_data) != GL_NO_ERROR) {
         compute_lib_error_queue_flush(&inst, stderr);
         return 7;
     }

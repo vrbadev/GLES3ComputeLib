@@ -9,6 +9,7 @@
 #ifndef GLES3COMPUTELIB_QUEUE_H
 #define GLES3COMPUTELIB_QUEUE_H
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
